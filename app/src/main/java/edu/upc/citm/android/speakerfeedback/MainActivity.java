@@ -6,6 +6,7 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,8 +31,9 @@ public class MainActivity extends AppCompatActivity {
     private String userId;
     private ListenerRegistration roomRegistration;
     private ListenerRegistration usersRegistration;
+
     //Test
-    
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
-            //textview.setText(String.format("Numuser: %d", documentSnapshots.size()));
+            textview.setText(String.format("Users: %d", documentSnapshots.size()));
 
             String nomsUsuaris = "";
             for (DocumentSnapshot doc : documentSnapshots)
@@ -74,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
                 nomsUsuaris += doc.getString("name") + "\n";
             }
 
-            textview.setText(nomsUsuaris);
+            //textview.setText(nomsUsuaris);
         }
     };
 
@@ -152,5 +154,11 @@ public class MainActivity extends AppCompatActivity {
                 finish();
             }
         });
+    }
+
+    public void OnClickBarra(View view) {
+
+
+
     }
 }
