@@ -14,7 +14,6 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
-import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.ListenerRegistration;
@@ -42,15 +41,6 @@ public class MainActivity extends AppCompatActivity {
         textview = findViewById(R.id.textview);
 
         getOnRegisterUser();
-
-        onStartUser();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-
-        onDestroyUser();
     }
 
     private EventListener<DocumentSnapshot> roomListener = new EventListener<DocumentSnapshot>() {
@@ -94,6 +84,7 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
 
         roomRegistration = db.collection("rooms").document("testroom").addSnapshotListener(roomListener);
+
         usersRegistration = db.collection("users").whereEqualTo("room", "testroom").addSnapshotListener(usersListener);
     }
 
@@ -161,23 +152,5 @@ public class MainActivity extends AppCompatActivity {
                 finish();
             }
         });
-    }
-
-    private void onStartUser(){
-
-        Map<String, Object> fields = new HashMap<>();
-        fields.put("room", "testroom");
-
-        db.collection("users").document(userId).update(fields);
-
-    }
-
-    private void onDestroyUser(){
-
-        Map<String, Object> fields = new HashMap<>();
-        fields.put("room", FieldValue.delete());
-
-        db.collection("users").document(userId).update(fields);
-
     }
 }
