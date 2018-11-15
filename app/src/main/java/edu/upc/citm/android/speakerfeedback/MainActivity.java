@@ -6,6 +6,7 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,14 +26,18 @@ import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
+    //MainActivity
     private static final int REGISTER_USER = 0;
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
     private TextView textview;
     private String userId;
     private ListenerRegistration roomRegistration;
     private ListenerRegistration usersRegistration;
-    //Test
-    
+
+    public void OnClickBarra(View view) {
+       Intent intent = new Intent(this, UserListActivity.class);
+       startActivity(intent);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
