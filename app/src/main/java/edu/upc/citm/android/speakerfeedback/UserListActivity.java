@@ -5,9 +5,17 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.EventListener;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,18 +24,23 @@ public class UserListActivity extends AppCompatActivity {
     List<String> usuaris;
     private RecyclerView user_list;
 
+    private FirebaseFirestore db = FirebaseFirestore.getInstance();
+    private ListenerRegistration usersRegistration;
+    private UserAdapter adapter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_users_holder);
 
+        onStart();
+
         usuaris = new ArrayList<>();
-        usuaris.add("pauek");
-        usuaris.add("aleix");
 
         user_list = findViewById(R.id.user_list);
         user_list.setLayoutManager(new LinearLayoutManager(this));
-        user_list.setAdapter(new UserAdapter());
+        adapter = new UserAdapter();
+        user_list.setAdapter(adapter);
     }
 
     class ViewHolder extends RecyclerView.ViewHolder{
@@ -57,5 +70,47 @@ public class UserListActivity extends AppCompatActivity {
             holder.user_list.setText(user_name);
 
         }
+    }
+
+    //rebre info d'usuaris a temps real
+    private EventListener<QuerySnapshot> usersListener = new EventListener<QuerySnapshot>() {
+        @Override
+        public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException e) {
+            if (e != null)
+            {
+                Log.e("SpeakerFeedback", "Error al rebre usuaris dins d'un room", e);
+                return;
+            }
+
+            //textview.setText(String.format("Numuser: %d", documentSnapshots.size()));
+
+            updateList(documentSnapshots);
+
+            //textview.setText(nomsUsuaris);
+        }
+    };
+
+    @Override
+    protected void onStart()
+    {
+        super.onStart();
+
+        usersRegistration = db.collection("users").whereEqualTo("room", "testroom").addSnapshotListener(usersListener);
+    }
+
+    @Override
+    protected void onStop() {
+        usersRegistration.remove();
+        super.onStop();
+    }
+
+    private void updateList(QuerySnapshot documentSnapshots)
+    {
+        usuaris.clear();
+        for (DocumentSnapshot doc : documentSnapshots)
+        {
+            usuaris.add(doc.getString("name"));
+        }
+        adapter.notifyDataSetChanged();
     }
 }

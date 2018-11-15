@@ -53,9 +53,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
-
         onDestroyUser();
+        super.onDestroy();
     }
 
     private EventListener<DocumentSnapshot> roomListener = new EventListener<DocumentSnapshot>() {
@@ -170,16 +169,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void onStartUser(){
-        Map<String, Object> fields = new HashMap<>();
-        fields.put("room", "testroom");
-
-        db.collection("users").document(userId).update(fields);
+        db.collection("users").document(userId).update("room", "testroom");
     }
 
     private void onDestroyUser(){
-        Map<String, Object> fields = new HashMap<>();
-        fields.put("room", FieldValue.delete());
-
-        db.collection("users").document(userId).update(fields);
+        db.collection("users").document(userId).update("room", FieldValue.delete());
     }
 }
