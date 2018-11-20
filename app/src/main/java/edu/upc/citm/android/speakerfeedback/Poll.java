@@ -61,4 +61,15 @@ public class Poll {
     public void setResults(List<Integer> results) {
         this.results = results;
     }
+
+    public String getOptionsString(){
+        //així se sumen molts strings a java
+        StringBuilder b = new StringBuilder();
+        for (String opt : options)
+        {
+            b.append(opt);
+            b.append("\n");
+        }
+        return b.toString();
+    }
 }

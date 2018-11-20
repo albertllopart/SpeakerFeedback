@@ -5,8 +5,11 @@ import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -19,7 +22,10 @@ import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
+
+import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,7 +40,10 @@ public class MainActivity extends AppCompatActivity {
     private TextView textview;
     private String userId;
 
-    private List<Poll> polls;
+    private List<Poll> polls = new ArrayList<>();
+
+    private RecyclerView polls_view;
+    private Adapter adapter;
 
     public void OnClickBarra(View view) {
        Intent intent = new Intent(this, UserListActivity.class);
@@ -47,6 +56,12 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         textview = findViewById(R.id.textview);
+
+        polls_view = findViewById(R.id.polls_view);
+        adapter = new Adapter();
+
+        polls_view.setLayoutManager(new LinearLayoutManager(this));
+        polls_view.setAdapter(adapter);
 
         getOnRegisterUser();
 
@@ -103,14 +118,14 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
-            polls = new ArrayList<>();
+            polls.clear();
             for(DocumentSnapshot doc: documentSnapshots)
             {
                 Poll poll = doc.toObject(Poll.class);
                 polls.add(poll);
             }
             Log.i("SpeakerFeedback", String.format("He carregat %d polls", polls.size()));
-            //TODO avisar l'adaptador per refrescar la llista
+            adapter.notifyDataSetChanged();
         }
     };
 
@@ -123,7 +138,8 @@ public class MainActivity extends AppCompatActivity {
 
         db.collection("users").whereEqualTo("room", "testroom").addSnapshotListener(this, usersListener);
 
-        db.collection("rooms").document("testroom").collection("polls").addSnapshotListener(this, pollslistener);
+        db.collection("rooms").document("testroom").collection("polls").orderBy("start", Query.Direction.DESCENDING)
+                .addSnapshotListener(this, pollslistener);
     }
 
 
@@ -191,5 +207,41 @@ public class MainActivity extends AppCompatActivity {
 
     private void onDestroyUser(){
         db.collection("users").document(userId).update("room", FieldValue.delete());
+    }
+
+    class ViewHolder extends RecyclerView.ViewHolder {
+        private TextView question_view;
+        private TextView options_view;
+
+        public ViewHolder(View itemView)
+        {
+            super(itemView);
+            question_view = itemView.findViewById(R.id.question_view);
+            options_view = itemView.findViewById(R.id.options_view);
+        }
+    }
+
+    class Adapter extends RecyclerView.Adapter<ViewHolder> {
+
+        @NonNull
+        @Override
+        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View itemView = getLayoutInflater().inflate(R.layout.poll_view, parent, false);
+            return new ViewHolder(itemView);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+            Poll poll = polls.get(position);
+
+            holder.question_view.setText(poll.getQuestion());
+
+            holder.options_view.setText(poll.getOptionsString());
+        }
+
+        @Override
+        public int getItemCount() {
+            return polls.size();
+        }
     }
 }
