@@ -21,7 +21,9 @@ import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
@@ -31,8 +33,8 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
     private TextView textview;
     private String userId;
-    private ListenerRegistration roomRegistration;
-    private ListenerRegistration usersRegistration;
+
+    private List<Poll> polls;
 
     public void OnClickBarra(View view) {
        Intent intent = new Intent(this, UserListActivity.class);
@@ -92,23 +94,38 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    private EventListener<QuerySnapshot> pollslistener = new EventListener<QuerySnapshot>() {
+        @Override
+        public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException e) {
+            if (e != null)
+            {
+                Log.e("SpeakerFeedback", "Error al rebre la llista de polls", e);
+                return;
+            }
+
+            polls = new ArrayList<>();
+            for(DocumentSnapshot doc: documentSnapshots)
+            {
+                Poll poll = doc.toObject(Poll.class);
+                polls.add(poll);
+            }
+            Log.i("SpeakerFeedback", String.format("He carregat %d polls", polls.size()));
+            //TODO avisar l'adaptador per refrescar la llista
+        }
+    };
+
     @Override
     protected void onStart()
     {
         super.onStart();
 
-        roomRegistration = db.collection("rooms").document("testroom").addSnapshotListener(roomListener);
+        db.collection("rooms").document("testroom").addSnapshotListener(this, roomListener);
 
-        usersRegistration = db.collection("users").whereEqualTo("room", "testroom").addSnapshotListener(usersListener);
+        db.collection("users").whereEqualTo("room", "testroom").addSnapshotListener(this, usersListener);
+
+        db.collection("rooms").document("testroom").collection("polls").addSnapshotListener(this, pollslistener);
     }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-
-        roomRegistration.remove();
-        usersRegistration.remove();
-    }
 
     private void getOnRegisterUser() {
         // Busquem a les preferències de l'app l'ID de l'usuari per saber si ja s'havia registrat
