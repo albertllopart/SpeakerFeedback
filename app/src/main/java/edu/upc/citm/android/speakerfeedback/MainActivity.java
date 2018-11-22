@@ -56,6 +56,8 @@ public class MainActivity extends AppCompatActivity {
        startActivity(intent);
     }
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -230,6 +232,20 @@ public class MainActivity extends AppCompatActivity {
         db.collection("users").document(userId).update("rooms", FieldValue.delete());
     }
 
+    private void OnClickPollLabel(int pos) {
+
+        List<String> options = new ArrayList<>();
+        options = polls.get(pos).getOptions();
+
+        Intent intent = new Intent(this, PollAnswer.class);
+        intent.putExtra("question", polls.get(pos).getQuestion());
+        intent.putExtra("option1", options.get(0));
+        intent.putExtra("option2", options.get(1));
+
+        startActivity(intent);
+    }
+
+
     class ViewHolder extends RecyclerView.ViewHolder {
         private CardView card_view;
         private TextView label_view;
@@ -243,6 +259,15 @@ public class MainActivity extends AppCompatActivity {
             label_view    = itemView.findViewById(R.id.label_view);
             question_view = itemView.findViewById(R.id.question_view);
             options_view  = itemView.findViewById(R.id.options_view);
+            card_view.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    int pos = getAdapterPosition();
+                    if(polls.get(pos).isOpen())
+                        OnClickPollLabel(pos);
+                }
+            });
+
         }
     }
 

@@ -57,6 +57,7 @@ public class UserListActivity extends AppCompatActivity {
         @Override
         public int getItemCount() { return usuaris.size();}
 
+
         @NonNull
         @Override
         public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
