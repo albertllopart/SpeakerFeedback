@@ -1,5 +1,6 @@
 package edu.upc.citm.android.speakerfeedback;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -9,9 +10,20 @@ public class Poll {
     private boolean open;
     private Date start, end;
     private List<Integer> results;
+    private String poll_id;
+
 
     Poll() {
 
+    }
+
+
+    public String getPoll_id() {
+        return poll_id;
+    }
+
+    public void setPoll_id(String poll_id) {
+        this.poll_id = poll_id;
     }
 
     public String getQuestion() {
@@ -65,11 +77,34 @@ public class Poll {
     public String getOptionsString(){
         //així se sumen molts strings a java
         StringBuilder b = new StringBuilder();
-        for (String opt : options)
-        {
-            b.append(opt);
-            b.append("\n");
+
+        for (int i = 0; i < options.size(); i++) {
+            b.append(options.get(i));
+            if (results != null) {
+                b.append(" ");
+                if (results.get(i) == null) {
+                    b.append("0");
+                } else {
+                    b.append(results.get(i));
+                }
+            }
+            if (i < options.size() - 1) {
+                b.append("\n");
+            }
         }
+
         return b.toString();
+    }
+
+    public void addVote(int option) {
+        assert(results != null);
+        assert(results.get(option) != null);
+        results.set(option, results.get(option) + 1);
+    }
+    public void resetVotes() {
+        results = new ArrayList<>();
+        for (int i = 0; i < options.size(); i++) {
+            results.add(0);
+        }
     }
 }

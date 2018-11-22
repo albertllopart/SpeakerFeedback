@@ -36,11 +36,16 @@ public class MainActivity extends AppCompatActivity {
 
     //MainActivity
     private static final int REGISTER_USER = 0;
+    private static final int NEW_POLL = 1;
+
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
+    private DocumentReference roomRef;
+
     private TextView textview;
     private String userId;
 
     private List<Poll> polls = new ArrayList<>();
+    private Map<String, Poll> polls_map = new HashMap<>();
 
     private RecyclerView polls_view;
     private Adapter adapter;
@@ -64,8 +69,9 @@ public class MainActivity extends AppCompatActivity {
         polls_view.setAdapter(adapter);
 
         getOnRegisterUser();
-
-        onStartUser();
+        if (userId != null) {
+            onStartUser();
+        }
     }
 
     @Override
@@ -122,24 +128,37 @@ public class MainActivity extends AppCompatActivity {
             for(DocumentSnapshot doc: documentSnapshots)
             {
                 Poll poll = doc.toObject(Poll.class);
+                poll.setPoll_id(doc.getId());
                 polls.add(poll);
+                polls_map.put(doc.getId(), poll);
             }
             Log.i("SpeakerFeedback", String.format("He carregat %d polls", polls.size()));
             adapter.notifyDataSetChanged();
         }
     };
 
+
+    private void resetVotes() {
+        for (Poll poll : polls) {
+            poll.resetVotes();
+        }
+    }
+
     @Override
     protected void onStart()
     {
         super.onStart();
 
-        db.collection("rooms").document("testroom").addSnapshotListener(this, roomListener);
+        setUpSnapshotListeners();
+    }
 
-        db.collection("users").whereEqualTo("room", "testroom").addSnapshotListener(this, usersListener);
-
-        db.collection("rooms").document("testroom").collection("polls").orderBy("start", Query.Direction.DESCENDING)
+    private void setUpSnapshotListeners() {
+        roomRef = db.collection("rooms").document("testroom");
+        roomRef.addSnapshotListener(this, roomListener);
+        roomRef.collection("polls").orderBy("start", Query.Direction.DESCENDING)
                 .addSnapshotListener(this, pollslistener);
+        db.collection("users").whereEqualTo("room", "testroom")
+                .addSnapshotListener(this, usersListener);
     }
 
 
@@ -189,6 +208,7 @@ public class MainActivity extends AppCompatActivity {
                         .putString("userId", userId)
                         .commit();
                 Log.i("SpeakerFeedback", "New user: userId = " + userId);
+                onStartUser();
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
@@ -202,11 +222,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void onStartUser(){
-        db.collection("users").document(userId).update("room", "testroom");
+        db.collection("users").document(userId).update("rooms", "testroom");
     }
 
     private void onDestroyUser(){
-        db.collection("users").document(userId).update("room", FieldValue.delete());
+        db.collection("users").document(userId).update("rooms", FieldValue.delete());
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {
