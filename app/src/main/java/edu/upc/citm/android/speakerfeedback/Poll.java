@@ -95,16 +95,4 @@ public class Poll {
 
         return b.toString();
     }
-
-    public void addVote(int option) {
-        assert(results != null);
-        assert(results.get(option) != null);
-        results.set(option, results.get(option) + 1);
-    }
-    public void resetVotes() {
-        results = new ArrayList<>();
-        for (int i = 0; i < options.size(); i++) {
-            results.add(0);
-        }
-    }
 }

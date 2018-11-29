@@ -51,6 +51,8 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView polls_view;
     private Adapter adapter;
 
+    private List<String> options = new ArrayList<>();
+
 
     public void OnClickBarra(View view) {
        Intent intent = new Intent(this, UserListActivity.class);
@@ -156,13 +158,6 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-
-    private void resetVotes() {
-        for (Poll poll : polls) {
-            poll.resetVotes();
-        }
-    }
-
     @Override
     protected void onStart()
     {
@@ -250,13 +245,13 @@ public class MainActivity extends AppCompatActivity {
 
     private void OnClickPollLabel(int pos) {
 
-        List<String> options = new ArrayList<>();
         options = polls.get(pos).getOptions();
 
         Intent intent = new Intent(this, PollAnswer.class);
         intent.putExtra("question", polls.get(pos).getQuestion());
         intent.putExtra("option1", options.get(0));
         intent.putExtra("option2", options.get(1));
+        intent.putExtra("pollid", polls.get(pos).getPoll_id());
 
         startActivity(intent);
     }
@@ -279,7 +274,8 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View v) {
                     int pos = getAdapterPosition();
-                    if(polls.get(pos).isOpen())
+                    //if(polls.get(pos).isOpen())
+                    //TODO: DESCOMENTAR AIXÒ A L'ACABAR
                         OnClickPollLabel(pos);
                 }
             });

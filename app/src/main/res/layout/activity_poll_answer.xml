@@ -27,6 +27,7 @@
         android:layout_marginLeft="16dp"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
+        android:onClick="onClickOption1"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/answer_question_view"
         tools:text="YES" />
@@ -38,6 +39,7 @@
         android:layout_marginLeft="16dp"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
+        android:onClick="onClickOption2"
         app:layout_constraintStart_toEndOf="@+id/btn_opt_1"
         app:layout_constraintTop_toBottomOf="@+id/answer_question_view"
         tools:text="NO" />
