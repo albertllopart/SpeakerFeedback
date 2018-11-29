@@ -51,10 +51,24 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView polls_view;
     private Adapter adapter;
 
+
     public void OnClickBarra(View view) {
        Intent intent = new Intent(this, UserListActivity.class);
        startActivity(intent);
     }
+
+    private void startFirestoreListenerService(){
+        Intent intent =  new Intent(this, FirestoreListenerService.class);
+        intent.putExtra("room","testroom");
+        startService(intent);
+    }
+
+    private void stopFirestoreListenerService(){
+        Intent intent = new Intent(this, FirestoreListenerService.class);
+        stopService(intent);
+
+    }
+
 
 
 
@@ -75,6 +89,8 @@ public class MainActivity extends AppCompatActivity {
         if (userId != null) {
             onStartUser();
         }
+        startFirestoreListenerService();
+
     }
 
     @Override
