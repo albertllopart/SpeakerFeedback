@@ -1,8 +1,10 @@
 package edu.upc.citm.android.speakerfeedback;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.CardView;
@@ -191,6 +193,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
@@ -245,15 +248,28 @@ public class MainActivity extends AppCompatActivity {
 
     private void OnClickPollLabel(int pos) {
 
-        options = polls.get(pos).getOptions();
+        Poll pollid = polls.get(pos);
+        if( !pollid.isOpen()){
+            return;
+        }
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(pollid.getQuestion());
+        String[]options = new String[pollid.getOptions().size()];
 
-        Intent intent = new Intent(this, PollAnswer.class);
-        intent.putExtra("question", polls.get(pos).getQuestion());
-        intent.putExtra("option1", options.get(0));
-        intent.putExtra("option2", options.get(1));
-        intent.putExtra("pollid", polls.get(pos).getPoll_id());
+        for (int i = 0; i < pollid.getOptions().size(); i++){
+            options[i] = pollid.getOptions().get(i);
+        }
+        builder.setItems(options, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                Map<String, Object> map = new HashMap<String, Object>();
+                map.put("pollid", polls.get(0).getPoll_id());
+                map.put("option", i);
+                db.collection("rooms").document("testroom").collection("votes").document(userId).set(map);
+            }
+        });
+        builder.create().show();
 
-        startActivity(intent);
     }
 
 
@@ -274,8 +290,8 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onClick(View v) {
                     int pos = getAdapterPosition();
-                    //if(polls.get(pos).isOpen())
-                    //TODO: DESCOMENTAR AIXÒ A L'ACABAR
+                    if(polls.get(pos).isOpen())
+
                         OnClickPollLabel(pos);
                 }
             });
@@ -323,4 +339,6 @@ public class MainActivity extends AppCompatActivity {
             return polls.size();
         }
     }
+
+
 }
