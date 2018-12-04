@@ -11,6 +11,9 @@ import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -31,6 +34,7 @@ import com.google.firebase.firestore.QuerySnapshot;
 import org.w3c.dom.Text;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,11 +74,7 @@ public class MainActivity extends AppCompatActivity {
     private void stopFirestoreListenerService(){
         Intent intent = new Intent(this, FirestoreListenerService.class);
         stopService(intent);
-
     }
-
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -239,11 +239,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void onStartUser(){
-        db.collection("users").document(userId).update("rooms", "testroom");
+        db.collection("users").document(userId).update(
+                "room", "testroom",
+                "last_active", new Date());
     }
 
     private void onDestroyUser(){
-        db.collection("users").document(userId).update("rooms", FieldValue.delete());
+        db.collection("users").document(userId).update("room", FieldValue.delete());
     }
 
     private void OnClickPollLabel(int pos) {
@@ -340,5 +342,24 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.exit_menu, menu);
+        return true;
+    }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId())
+        {
+            case R.id.exit_menu_item:
+            {
+                stopFirestoreListenerService();
+                finish();
+            }
+        }
+
+        return true;
+    }
 }
