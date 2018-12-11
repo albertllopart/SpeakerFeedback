@@ -112,6 +112,10 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
+            if (!documentSnapshot.contains("open") || !documentSnapshot.getBoolean("open")) {
+                finish();
+            }
+
             String name = documentSnapshot.getString("name");
             setTitle(name);
         }
