@@ -43,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
 
     //MainActivity
     private static final int REGISTER_USER = 0;
-    private static final int NEW_POLL = 1;
+    private static final int JOIN_ROOM = 1;
 
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
     private DocumentReference roomRef;
@@ -93,14 +93,21 @@ public class MainActivity extends AppCompatActivity {
         if (userId != null) {
             onStartUser();
         }
+        getOnJoinRoom();
         startFirestoreListenerService();
-
     }
 
     @Override
     protected void onDestroy() {
         onDestroyUser();
+        stopFirestoreListenerService();
         super.onDestroy();
+    }
+
+    private void onRoomClose(){
+        stopFirestoreListenerService();
+
+        finish();
     }
 
     private EventListener<DocumentSnapshot> roomListener = new EventListener<DocumentSnapshot>() {
@@ -113,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             if (!documentSnapshot.contains("open") || !documentSnapshot.getBoolean("open")) {
-                finish();
+                onRoomClose();
             }
 
             String name = documentSnapshot.getString("name");
@@ -197,6 +204,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void getOnJoinRoom(){
+        Intent intent = new Intent(this, RoomListActivity.class);
+        startActivityForResult(intent, JOIN_ROOM);
+    }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -210,9 +222,22 @@ public class MainActivity extends AppCompatActivity {
                     finish();
                 }
                 break;
+            case JOIN_ROOM:
+                if (resultCode == RESULT_OK){
+                    String name = data.getStringExtra("name");
+                    joinRoom(name);
+                }
+
             default:
                 super.onActivityResult(requestCode, resultCode, data);
         }
+    }
+
+    private void joinRoom(String name){
+        roomRef = db.collection("rooms").document(name);
+        db.collection("users").document(userId).update(
+                "room", name,
+                "last_active", new Date());
     }
 
     private void registerUser(String name) {
