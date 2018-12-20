@@ -227,6 +227,7 @@ public class MainActivity extends AppCompatActivity {
                     String name = data.getStringExtra("name");
                     joinRoom(name);
                 }
+                break;
 
             default:
                 super.onActivityResult(requestCode, resultCode, data);

@@ -31,8 +31,8 @@ public class RoomListActivity extends AppCompatActivity {
 
     private DocumentReference roomRef;
 
-    private boolean open = false;
-    private boolean password_bool = false;
+
+
     private String password;
     private String user_password;
 
@@ -47,67 +47,44 @@ public class RoomListActivity extends AppCompatActivity {
     }
 
     public void onJoinRoom(View view) {
-        String name = edit_name.getText().toString();
+        final String name = edit_name.getText().toString();
 
-        if(rooms.contains(name)) {
+        db.collection("rooms").document(name).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+            @Override
+            public void onSuccess(DocumentSnapshot documentSnapshot) {
+                if (!documentSnapshot.exists()) {
+                    // TODO: Missatge
 
-            roomRef = db.collection("rooms").document(name);
+                    return;
+                }
 
-            if (onCheckOpen(name)) {
+                if (!documentSnapshot.contains("open") || !documentSnapshot.getBoolean("open")) {
 
-                if (onCheckPassword(name)){
-                    //TODO demanar password
+                    return;
+                }
+
+                if (!documentSnapshot.contains("password")) {
+
+                    onRoomJoin();
+                }
+
+                else {
+                    password = documentSnapshot.getString("password");
+
                     onEnterPassword();
 
-                    if (user_password.equals(password)){
-                        onRoomJoin(name);
+                    if(password.equals(user_password)){
+                        onRoomJoin();
                     }
                     else{
-                        Toast.makeText(this, "INCORRECT PASSWORD", Toast.LENGTH_LONG).show();
+                        Toast.makeText(RoomListActivity.this,"INCORRECT PASSWORD", Toast.LENGTH_SHORT).show();
                     }
                 }
-                else{
-                    //TODO entrar a la room
-                    onRoomJoin(name);
-                }
-            }
-        }
-
-
-
-    }
-
-    public boolean onCheckOpen(String name){
-
-        roomRef.get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-            @Override
-            public void onSuccess(DocumentSnapshot documentSnapshot) {
-
-                if (documentSnapshot.contains("open")) {
-                    open = documentSnapshot.getBoolean("open");
-                }
             }
         });
 
-        return open;
     }
 
-    public boolean onCheckPassword(String name){
-
-        password_bool = false;
-
-        roomRef.get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
-            @Override
-            public void onSuccess(DocumentSnapshot documentSnapshot) {
-                if (documentSnapshot.contains("password")) {
-                    password_bool = true;
-                    password = documentSnapshot.getString("password");
-                }
-            }
-        });
-
-        return password_bool;
-    }
 
     private void onEnterPassword(){
 
@@ -116,9 +93,9 @@ public class RoomListActivity extends AppCompatActivity {
 
     }
 
-    private void onRoomJoin(String name){
+    private void onRoomJoin(){
         Intent intent = new Intent();
-        intent.putExtra("name", name);
+        intent.putExtra("name", edit_name.getText().toString());
         setResult(RESULT_OK, intent);
         finish();
     }
