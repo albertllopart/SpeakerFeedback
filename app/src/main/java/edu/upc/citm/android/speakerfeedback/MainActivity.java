@@ -27,11 +27,8 @@ import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
-import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
-
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -50,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView textview;
     private String userId;
+    private String roomId;
 
     private List<Poll> polls = new ArrayList<>();
     private Map<String, Poll> polls_map = new HashMap<>();
@@ -62,12 +60,13 @@ public class MainActivity extends AppCompatActivity {
 
     public void OnClickBarra(View view) {
        Intent intent = new Intent(this, UserListActivity.class);
+       intent.putExtra("roomId", roomId);
        startActivity(intent);
     }
 
     private void startFirestoreListenerService(){
         Intent intent =  new Intent(this, FirestoreListenerService.class);
-        intent.putExtra("room","testroom");
+        intent.putExtra("room",roomId);
         startService(intent);
     }
 
@@ -89,12 +88,7 @@ public class MainActivity extends AppCompatActivity {
         polls_view.setLayoutManager(new LinearLayoutManager(this));
         polls_view.setAdapter(adapter);
 
-        getOnRegisterUser();
-        if (userId != null) {
-            onStartUser();
-        }
-        getOnJoinRoom();
-        startFirestoreListenerService();
+        getOrRegisterUser();
     }
 
     @Override
@@ -106,7 +100,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void onRoomClose(){
         stopFirestoreListenerService();
-
         finish();
     }
 
@@ -115,7 +108,7 @@ public class MainActivity extends AppCompatActivity {
         public void onEvent(DocumentSnapshot documentSnapshot, FirebaseFirestoreException e) {
             if (e != null)
             {
-                Log.e("SpeakerFeedback", "Error al rebre rooms/testroom", e);
+                Log.e("SpeakerFeedback", "Error al rebre rooms", e);
                 return;
             }
 
@@ -175,21 +168,19 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart()
     {
         super.onStart();
-
-        setUpSnapshotListeners();
     }
 
     private void setUpSnapshotListeners() {
-        roomRef = db.collection("rooms").document("testroom");
+        roomRef = db.collection("rooms").document(roomId);
         roomRef.addSnapshotListener(this, roomListener);
         roomRef.collection("polls").orderBy("start", Query.Direction.DESCENDING)
                 .addSnapshotListener(this, pollslistener);
-        db.collection("users").whereEqualTo("room", "testroom")
+        db.collection("users").whereEqualTo("room", roomId)
                 .addSnapshotListener(this, usersListener);
     }
 
 
-    private void getOnRegisterUser() {
+    private void getOrRegisterUser() {
         // Busquem a les preferències de l'app l'ID de l'usuari per saber si ja s'havia registrat
         SharedPreferences prefs = getSharedPreferences("config", MODE_PRIVATE);
         userId = prefs.getString("userId", null);
@@ -198,17 +189,19 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(this, RegisterUserActivity.class);
             startActivityForResult(intent, REGISTER_USER);
             Toast.makeText(this, "Encara t'has de registrar", Toast.LENGTH_SHORT).show();
+
         } else {
             // Ja està registrat, mostrem el id al Log
             Log.i("SpeakerFeedback", "userId = " + userId);
+            getOrJoinRoom();
+
         }
     }
 
-    private void getOnJoinRoom(){
+    private void getOrJoinRoom(){
         Intent intent = new Intent(this, RoomListActivity.class);
         startActivityForResult(intent, JOIN_ROOM);
     }
-
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -222,10 +215,13 @@ public class MainActivity extends AppCompatActivity {
                     finish();
                 }
                 break;
+
             case JOIN_ROOM:
                 if (resultCode == RESULT_OK){
                     String name = data.getStringExtra("name");
                     joinRoom(name);
+                } else {
+                    Toast.makeText(this, "No has escollit el room...", Toast.LENGTH_SHORT).show();
                 }
                 break;
 
@@ -235,10 +231,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void joinRoom(String name){
-        roomRef = db.collection("rooms").document(name);
+        roomId = name;
+        roomRef = db.collection("rooms").document(roomId);
         db.collection("users").document(userId).update(
-                "room", name,
+                "room", roomId,
                 "last_active", new Date());
+        startFirestoreListenerService();
+        setUpSnapshotListeners();
     }
 
     private void registerUser(String name) {
@@ -255,7 +254,7 @@ public class MainActivity extends AppCompatActivity {
                         .putString("userId", userId)
                         .commit();
                 Log.i("SpeakerFeedback", "New user: userId = " + userId);
-                onStartUser();
+                getOrJoinRoom();
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
@@ -268,14 +267,11 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void onStartUser(){
-        db.collection("users").document(userId).update(
-                "room", "testroom",
-                "last_active", new Date());
-    }
 
     private void onDestroyUser(){
-        db.collection("users").document(userId).update("room", FieldValue.delete());
+        if (userId != null) {
+            db.collection("users").document(userId).update("room", FieldValue.delete());
+        }
     }
 
     private void OnClickPollLabel(int pos) {
@@ -297,7 +293,7 @@ public class MainActivity extends AppCompatActivity {
                 Map<String, Object> map = new HashMap<String, Object>();
                 map.put("pollid", polls.get(0).getPoll_id());
                 map.put("option", i);
-                db.collection("rooms").document("testroom").collection("votes").document(userId).set(map);
+                db.collection("rooms").document(roomId).collection("votes").document(userId).set(map);
             }
         });
         builder.create().show();

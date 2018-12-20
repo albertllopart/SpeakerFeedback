@@ -1,5 +1,6 @@
 package edu.upc.citm.android.speakerfeedback;
 
+import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -28,6 +29,8 @@ public class UserListActivity extends AppCompatActivity {
     private ListenerRegistration usersRegistration;
     private UserAdapter adapter;
 
+    private String roomId;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,6 +44,9 @@ public class UserListActivity extends AppCompatActivity {
         user_list.setLayoutManager(new LinearLayoutManager(this));
         adapter = new UserAdapter();
         user_list.setAdapter(adapter);
+
+        Intent data = getIntent();
+        roomId = data.getStringExtra("roomId");
     }
 
     class ViewHolder extends RecyclerView.ViewHolder{
@@ -96,7 +102,7 @@ public class UserListActivity extends AppCompatActivity {
     {
         super.onStart();
 
-        usersRegistration = db.collection("users").whereEqualTo("room", "testroom").addSnapshotListener(usersListener);
+        usersRegistration = db.collection("users").whereEqualTo("room", roomId).addSnapshotListener(usersListener);
     }
 
     @Override

@@ -23,6 +23,7 @@ import java.util.List;
 
 public class RoomListActivity extends AppCompatActivity {
 
+    private static final int ENTER_PASSWORD = 1;
     private EditText edit_name;
     List<String> rooms;
 
@@ -30,11 +31,8 @@ public class RoomListActivity extends AppCompatActivity {
     private ListenerRegistration roomRegistration;
 
     private DocumentReference roomRef;
-
-
-
     private String password;
-    private String user_password;
+    private String roomId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,12 +42,13 @@ public class RoomListActivity extends AppCompatActivity {
         rooms = new ArrayList<>();
 
         edit_name = findViewById(R.id.password_edit);
+
     }
 
     public void onJoinRoom(View view) {
-        final String name = edit_name.getText().toString();
+        roomId = edit_name.getText().toString();
 
-        db.collection("rooms").document(name).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+        db.collection("rooms").document(roomId).get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
             @Override
             public void onSuccess(DocumentSnapshot documentSnapshot) {
                 if (!documentSnapshot.exists()) {
@@ -67,18 +66,9 @@ public class RoomListActivity extends AppCompatActivity {
 
                     onRoomJoin();
                 }
-
                 else {
                     password = documentSnapshot.getString("password");
-
                     onEnterPassword();
-
-                    if(password.equals(user_password)){
-                        onRoomJoin();
-                    }
-                    else{
-                        Toast.makeText(RoomListActivity.this,"INCORRECT PASSWORD", Toast.LENGTH_SHORT).show();
-                    }
                 }
             }
         });
@@ -87,15 +77,13 @@ public class RoomListActivity extends AppCompatActivity {
 
 
     private void onEnterPassword(){
-
         Intent intent = new Intent(this, EnterPassword.class);
-        startActivity(intent);
-
+        startActivityForResult(intent, ENTER_PASSWORD);
     }
 
     private void onRoomJoin(){
         Intent intent = new Intent();
-        intent.putExtra("name", edit_name.getText().toString());
+        intent.putExtra("name", roomId);
         setResult(RESULT_OK, intent);
         finish();
     }
@@ -130,9 +118,14 @@ public class RoomListActivity extends AppCompatActivity {
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent intent){
-        if (resultCode == RESULT_OK)
-        {
-            user_password = intent.getStringExtra("password");
+        if (requestCode == ENTER_PASSWORD && resultCode == RESULT_OK) {
+            String user_password = intent.getStringExtra("password");
+            if(password.equals(user_password)){
+                onRoomJoin();
+            }
+            else{
+                Toast.makeText(RoomListActivity.this,"INCORRECT PASSWORD", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 }
